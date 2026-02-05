@@ -109,33 +109,35 @@
       border-color: #600 !important;
       color: #ff9999 !important;
     }
-    /* 数据统计：横向排列 */
-    .stats-row {
+    /* 数据统计：固定宽度 + 居中 */
+    .stats-container {
       display: flex;
-      gap: 24px;
+      justify-content: center;
+      gap: 40px;
       margin-top: 12px;
     }
-    .stat-item {
-      flex: 1;
+    .stat-col {
       text-align: center;
+      width: 120px; /* 固定宽度 */
     }
     .stat-label {
       font-size: 0.9rem;
       color: #999;
+      margin-bottom: 4px;
     }
     .stat-value {
       font-size: 1.3rem;
       font-weight: bold;
-      margin-top: 4px;
-      text-align: right;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
+    /* 玩家总分统计表格：控制宽度 */
+    #playerStatsTable {
+      width: auto;
+      margin: 16px auto 0 auto;
+      min-width: 300px;
+      max-width: 600px;
     }
     th, td {
-      padding: 10px 8px;
+      padding: 10px 12px;
       text-align: center;
       border-bottom: 1px solid #222;
       font-size: 0.95rem;
@@ -145,12 +147,12 @@
       font-weight: 600;
     }
     .num-col {
-      text-align: right !important;
+      text-align: center !important;
     }
-    /* 已记录对局：新布局 */
+    /* 已记录对局：精确对齐 */
     .rounds-header, .round-item {
       display: grid;
-      grid-template-columns: 1fr 0.8fr 0.8fr 60px;
+      grid-template-columns: 1fr 90px 90px 60px; /* 固定数值列宽 */
       gap: 12px;
       padding: 10px 0;
       align-items: start;
@@ -257,12 +259,12 @@
 
     <div class="panel">
       <h2 class="panel-title">📊 数据统计</h2>
-      <div class="stats-row">
-        <div class="stat-item">
+      <div class="stats-container">
+        <div class="stat-col">
           <div class="stat-label">总局数</div>
           <div class="stat-value" id="totalRounds">0</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-col">
           <div class="stat-label">平台佣金（元）</div>
           <div class="stat-value" id="poolCoins">0</div>
         </div>
