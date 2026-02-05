@@ -3,157 +3,180 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🀄 四人麻将积分结算</title>
+  <title>🀄 麻将积分结算</title>
   <style>
-    :root {
-      --glass-bg: rgba(255, 255, 255, 0.15);
-      --glass-border: rgba(255, 255, 255, 0.3);
-      --panel-bg: rgba(30, 30, 40, 0.7);
-      --text-color: #fff;
-      --accent: #4fc3f7;
-      --error: #ff6b6b;
-      --success: #69f0ae;
-    }
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: #000;
+      color: #f0f0f0;
+      line-height: 1.6;
+      padding: 16px;
       min-height: 100vh;
-      padding: 20px;
     }
     .container {
-      max-width: 1000px;
+      max-width: 800px;
       margin: 0 auto;
     }
     header {
       text-align: center;
-      margin-bottom: 25px;
-      padding: 15px;
+      margin-bottom: 24px;
+      padding: 12px 0;
     }
     h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
+      font-weight: 600;
       margin-bottom: 8px;
     }
-    .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 20px;
+    .subtitle {
+      font-size: 0.95rem;
+      color: #aaa;
+    }
+    .panel {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
       margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (min-width: 600px) {
+      .form-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
+      font-size: 0.9rem;
+      color: #ccc;
     }
     input {
       width: 100%;
-      padding: 10px;
+      padding: 10px 12px;
+      background: #111;
+      border: 1px solid #333;
       border-radius: 8px;
-      border: 1px solid #555;
-      background: rgba(0,0,0,0.2);
       color: white;
+      font-size: 1rem;
     }
-    button {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    button:hover {
-      opacity: 0.9;
+    input:focus {
+      outline: none;
+      border-color: #555;
     }
     .btn-row {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
+    }
+    button {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #333;
+    }
+    .export-btn {
+      background: #1a1a1a;
+      border-color: #555;
+    }
+    .export-btn:hover {
+      background: #2a2a2a;
     }
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .stat-card {
-      background: var(--panel-bg);
-      padding: 15px;
-      border-radius: 12px;
       text-align: center;
+      padding: 12px 0;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: #999;
     }
     .stat-value {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
-      margin-top: 5px;
+      margin-top: 4px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 16px;
     }
     th, td {
-      padding: 12px;
+      padding: 12px 8px;
       text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid #222;
+      font-size: 0.95rem;
     }
     th {
-      background: rgba(0,0,0,0.2);
+      color: #bbb;
+      font-weight: 600;
     }
     .action-cell {
       display: flex;
       justify-content: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
-    .edit-btn, .delete-btn, .export-btn {
-      padding: 6px 12px;
-      font-size: 0.9rem;
-    }
-    .delete-btn {
-      background: var(--error);
-      color: white;
+    .edit-btn, .delete-btn {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 6px;
     }
     .edit-btn {
-      background: #ffb300;
-      color: #000;
+      background: #333;
+      color: #ffcc00;
     }
-    .export-btn {
-      background: #ba68c8;
-      color: white;
+    .delete-btn {
+      background: #333;
+      color: #ff6b6b;
     }
-    .wechat-tip {
-      background: rgba(255, 215, 0, 0.2);
-      padding: 12px;
-      border-radius: 8px;
+    .message {
+      min-height: 24px;
+      margin-top: 12px;
+      font-weight: 600;
       text-align: center;
-      margin-bottom: 15px;
-      font-weight: bold;
     }
-    @media (max-width: 600px) {
-      .form-grid, .stats-grid {
-        grid-template-columns: 1fr;
-      }
-      .btn-row {
-        flex-direction: column;
-      }
-      button {
-        width: 100%;
-      }
+    .error { color: #ff6b6b; }
+    .success { color: #69f0ae; }
+    .wechat-tip {
+      background: #1a1a1a;
+      border-left: 3px solid #ffcc00;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -164,64 +187,64 @@
     </div>
 
     <header>
-      <h1>🀄 四人麻将积分结算</h1>
-      <p>每局自动扣最高分玩家1分入金币池（1分 = 20金币）</p>
+      <h1>🀄 麻将积分结算</h1>
+      <p class="subtitle">每局自动扣最高分玩家1分入金币池（1分 = 20金币）</p>
     </header>
 
-    <div class="glass-panel">
-      <h2>添加新局记录</h2>
+    <div class="panel">
+      <h2 style="margin-bottom: 16px; font-size: 1.2rem;">添加新局记录</h2>
       <div class="form-grid">
-        <div>
-          <label>玩家 A</label>
+        <div class="form-group">
+          <label for="nameA">玩家 A</label>
           <input type="text" id="nameA" placeholder="昵称" list="knownPlayers">
           <input type="number" id="scoreA" placeholder="得分" step="any">
         </div>
-        <div>
-          <label>玩家 B</label>
+        <div class="form-group">
+          <label for="nameB">玩家 B</label>
           <input type="text" id="nameB" placeholder="昵称" list="knownPlayers">
           <input type="number" id="scoreB" placeholder="得分" step="any">
         </div>
-        <div>
-          <label>玩家 C</label>
+        <div class="form-group">
+          <label for="nameC">玩家 C</label>
           <input type="text" id="nameC" placeholder="昵称" list="knownPlayers">
           <input type="number" id="scoreC" placeholder="得分" step="any">
         </div>
-        <div>
-          <label>玩家 D</label>
+        <div class="form-group">
+          <label for="nameD">玩家 D</label>
           <input type="text" id="nameD" placeholder="昵称" list="knownPlayers">
           <input type="number" id="scoreD" placeholder="得分" step="any">
         </div>
       </div>
       <div class="btn-row">
         <button id="addRoundBtn">✅ 提交本局</button>
-        <button id="clearFormBtn">🔄 清空表单</button>
+        <button id="clearFormBtn">🔄 清空</button>
       </div>
-      <div id="message" style="margin-top:10px; min-height:24px; font-weight:bold;"></div>
+      <div id="message" class="message"></div>
     </div>
 
-    <div class="glass-panel">
-      <h2>📊 数据统计</h2>
+    <div class="panel">
+      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">📊 数据统计</h2>
       <div class="stats-grid">
         <div class="stat-card">
-          <div>平台金币池（积分）</div>
+          <div class="stat-label">平台金币池（积分）</div>
           <div class="stat-value" id="poolPoints">0</div>
         </div>
         <div class="stat-card">
-          <div>平台金币池（金币）</div>
+          <div class="stat-label">平台金币池（金币）</div>
           <div class="stat-value" id="poolCoins">0</div>
         </div>
         <div class="stat-card">
-          <div>总局数</div>
+          <div class="stat-label">总局数</div>
           <div class="stat-value" id="totalRounds">0</div>
         </div>
       </div>
     </div>
 
-    <div class="glass-panel">
-      <div class="btn-row" style="justify-content: flex-end;">
-        <button class="export-btn" id="exportCsvBtn">📤 导出为 CSV（Excel）</button>
+    <div class="panel">
+      <div class="btn-row" style="justify-content: flex-end; margin-bottom: 12px;">
+        <button class="export-btn" id="exportCsvBtn">📤 导出为 CSV</button>
       </div>
-      <h2>👤 玩家总分统计（1分 = 20金币）</h2>
+      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">👤 玩家总分统计</h2>
       <table id="playerStatsTable">
         <thead>
           <tr>
@@ -234,49 +257,42 @@
       </table>
     </div>
 
-    <div class="glass-panel">
-      <h2>📜 已记录对局</h2>
+    <div class="panel">
+      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">📜 已记录对局</h2>
       <table id="roundsTable">
         <thead>
           <tr>
-            <th>玩家A</th>
-            <th>玩家B</th>
-            <th>玩家C</th>
-            <th>玩家D</th>
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+            <th>D</th>
             <th>原始分</th>
             <th>结算后</th>
-            <th>金币池+1</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="roundsBody"></tbody>
       </table>
     </div>
-
-    <!-- 用于自动补全的 datalist -->
-    <datalist id="knownPlayers"></datalist>
   </div>
 
+  <datalist id="knownPlayers"></datalist>
+
   <script>
-    // ========== 数据存储 ==========
     let rounds = JSON.parse(localStorage.getItem('mahjongRounds') || '[]');
 
-    // 更新已知玩家列表（用于自动补全）
     function updateKnownPlayers() {
-      const knownPlayersSet = new Set();
-      rounds.forEach(round => {
-        round.names.forEach(name => knownPlayersSet.add(name));
-      });
-      const datalist = document.getElementById('knownPlayers');
-      datalist.innerHTML = '';
-      knownPlayersSet.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        datalist.appendChild(option);
+      const known = new Set();
+      rounds.forEach(r => r.names.forEach(n => known.add(n)));
+      const dl = document.getElementById('knownPlayers');
+      dl.innerHTML = '';
+      known.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        dl.appendChild(opt);
       });
     }
 
-    // ========== 获取表单数据 ==========
     function getFormData() {
       const names = [
         document.getElementById('nameA').value.trim(),
@@ -290,95 +306,76 @@
         parseFloat(document.getElementById('scoreC').value),
         parseFloat(document.getElementById('scoreD').value)
       ];
-
-      // 检查是否为空或无效
       for (let i = 0; i < 4; i++) {
-        if (!names[i] || isNaN(scores[i])) {
-          return null;
-        }
+        if (!names[i] || isNaN(scores[i])) return null;
       }
       return { names, scores };
     }
 
-    // ========== 查重 ==========
-    function isDuplicate(newRound) {
+    function isDuplicate(data) {
       return rounds.some(r =>
-        r.names.join(',') === newRound.names.join(',') &&
-        r.scores.join(',') === newRound.scores.join(',')
+        r.names.join(',') === data.names.join(',') &&
+        r.scores.join(',') === data.scores.join(',')
       );
     }
 
-    // ========== 添加新局 ==========
     function addRound() {
       const data = getFormData();
       if (!data) {
         showMessage('请填写所有玩家昵称和有效得分！', 'error');
         return;
       }
-
       if (isDuplicate(data)) {
-        showMessage('❌ 该局记录已存在，无法重复提交！', 'error');
+        showMessage('❌ 该局记录已存在！', 'error');
         return;
       }
 
-      // 找最高分（多个时取第一个）
       let maxIndex = 0;
       for (let i = 1; i < 4; i++) {
-        if (data.scores[i] > data.scores[maxIndex]) {
-          maxIndex = i;
-        }
+        if (data.scores[i] > data.scores[maxIndex]) maxIndex = i;
       }
 
-      const finalScores = [...data.scores];
-      finalScores[maxIndex] -= 1;
-
-      // 验证总和为 -1
-      const total = finalScores.reduce((a, b) => a + b, 0);
+      const final = [...data.scores];
+      final[maxIndex] -= 1;
+      const total = final.reduce((a, b) => a + b, 0);
       if (Math.abs(total + 1) > 1e-5) {
         showMessage('⚠️ 结算异常：总分不为 -1！', 'error');
         return;
       }
 
-      const newRound = {
+      rounds.push({
         id: Date.now(),
         names: data.names,
         scores: data.scores,
-        finalScores,
+        finalScores: final,
         timestamp: new Date().toLocaleString()
-      };
+      });
 
-      rounds.push(newRound);
       localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
-
       renderAll();
       clearForm();
       updateKnownPlayers();
       showMessage('✅ 本局已成功记录！', 'success');
     }
 
-    // ========== 辅助函数 ==========
     function clearForm() {
-      document.getElementById('nameA').value = '';
-      document.getElementById('nameB').value = '';
-      document.getElementById('nameC').value = '';
-      document.getElementById('nameD').value = '';
-      document.getElementById('scoreA').value = '';
-      document.getElementById('scoreB').value = '';
-      document.getElementById('scoreC').value = '';
-      document.getElementById('scoreD').value = '';
+      ['A','B','C','D'].forEach(p => {
+        document.getElementById(`name${p}`).value = '';
+        document.getElementById(`score${p}`).value = '';
+      });
     }
 
-    function showMessage(text, type = 'info') {
-      const msgEl = document.getElementById('message');
-      msgEl.textContent = text;
-      msgEl.style.color = type === 'error' ? '#ff6b6b' : '#69f0ae';
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className = `message ${type}`;
       setTimeout(() => {
-        if (msgEl.textContent === text) msgEl.textContent = '';
+        if (el.textContent === text) el.textContent = '';
       }, 4000);
     }
 
     function deleteRound(id) {
-      if (!confirm('确定删除这局记录？')) return;
+      if (!confirm('确定删除？')) return;
       rounds = rounds.filter(r => r.id !== id);
       localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
       renderAll();
@@ -386,28 +383,56 @@
     }
 
     function editRound(id) {
-      const round = rounds.find(r => r.id === id);
-      if (!round) return;
+      const r = rounds.find(x => x.id === id);
+      if (!r) return;
       deleteRound(id);
-      document.getElementById('nameA').value = round.names[0];
-      document.getElementById('nameB').value = round.names[1];
-      document.getElementById('nameC').value = round.names[2];
-      document.getElementById('nameD').value = round.names[3];
-      document.getElementById('scoreA').value = round.scores[0];
-      document.getElementById('scoreB').value = round.scores[1];
-      document.getElementById('scoreC').value = round.scores[2];
-      document.getElementById('scoreD').value = round.scores[3];
-      showMessage('📝 已载入该局数据，请修改后重新提交', 'info');
+      ['A','B','C','D'].forEach((p, i) => {
+        document.getElementById(`name${p}`).value = r.names[i];
+        document.getElementById(`score${p}`).value = r.scores[i];
+      });
+      showMessage('📝 已载入，请修改后重新提交', 'success');
     }
 
-    // ========== 导出为 CSV ==========
+    // ========== 增强版 CSV 导出 ==========
     function exportToCSV() {
       if (rounds.length === 0) {
         alert('暂无数据可导出！');
         return;
       }
 
-      let csv = '玩家A,玩家B,玩家C,玩家D,原始分A,原始分B,原始分C,原始分D,结算分A,结算分B,结算分C,结算分D,时间\n';
+      // 计算玩家总分
+      const playerStats = {};
+      rounds.forEach(r => {
+        r.names.forEach((name, i) => {
+          if (!playerStats[name]) playerStats[name] = 0;
+          playerStats[name] += r.finalScores[i];
+        });
+      });
+
+      const poolPoints = rounds.length;
+      const poolCoins = poolPoints * 20;
+
+      let csv = '';
+
+      // 第一部分：玩家总分统计
+      csv += '【玩家总分统计】\n';
+      csv += '玩家昵称,总积分,金币收益\n';
+      Object.entries(playerStats)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, total]) => {
+          csv += `"${name}",${total},${Math.round(total * 20)}\n`;
+        });
+      csv += '\n';
+
+      // 第二部分：金币池汇总
+      csv += '【金币池汇总】\n';
+      csv += '累计积分,累计金币,总局数\n';
+      csv += `${poolPoints},${poolCoins},${rounds.length}\n`;
+      csv += '\n';
+
+      // 第三部分：每局明细
+      csv += '【每局记录明细】\n';
+      csv += '玩家A,玩家B,玩家C,玩家D,原始分A,原始分B,原始分C,原始分D,结算分A,结算分B,结算分C,结算分D,时间\n';
       rounds.forEach(r => {
         csv += `"${r.names[0]}","${r.names[1]}","${r.names[2]}","${r.names[3]}"`;
         csv += `,${r.scores[0]},${r.scores[1]},${r.scores[2]},${r.scores[3]}`;
@@ -419,7 +444,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '麻将积分记录.csv';
+      a.download = '麻将积分记录_含统计.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -445,10 +470,9 @@
           <td>${r.names[3]}</td>
           <td>[${r.scores.map(s => s.toFixed(1)).join(', ')}]</td>
           <td>[${r.finalScores.map(s => s.toFixed(1)).join(', ')}]</td>
-          <td>+1 分 → 20 金币</td>
           <td class="action-cell">
-            <button class="edit-btn" onclick="editRound(${r.id})">✏️ 编辑</button>
-            <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️ 删除</button>
+            <button class="edit-btn" onclick="editRound(${r.id})">✏️</button>
+            <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(row);
@@ -456,10 +480,10 @@
     }
 
     function renderStats() {
-      const totalPool = rounds.length;
-      document.getElementById('poolPoints').textContent = totalPool;
-      document.getElementById('poolCoins').textContent = totalPool * 20;
-      document.getElementById('totalRounds').textContent = rounds.length;
+      const total = rounds.length;
+      document.getElementById('poolPoints').textContent = total;
+      document.getElementById('poolCoins').textContent = total * 20;
+      document.getElementById('totalRounds').textContent = total;
     }
 
     function renderPlayerStats() {
@@ -480,22 +504,20 @@
           row.innerHTML = `
             <td>${name}</td>
             <td>${total >= 0 ? '+' + total.toFixed(1) : total.toFixed(1)}</td>
-            <td>${(total * 20).toFixed(0)} 金币</td>
+            <td>${Math.round(total * 20)} 金币</td>
           `;
           tbody.appendChild(row);
         });
     }
 
-    // ========== 事件绑定 ==========
+    // ========== 初始化 ==========
     document.getElementById('addRoundBtn').addEventListener('click', addRound);
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
     document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
 
-    // ========== 初始化 ==========
     updateKnownPlayers();
     renderAll();
 
-    // 暴露给全局（用于 inline onclick）
     window.editRound = editRound;
     window.deleteRound = deleteRound;
   </script>
