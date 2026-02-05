@@ -96,27 +96,33 @@
     button:hover {
       background: #333;
     }
-    .export-btn {
+    .export-btn, .clear-all-btn {
       background: #1a1a1a;
       border-color: #555;
     }
-    .export-btn:hover {
+    .export-btn:hover, .clear-all-btn:hover {
       background: #2a2a2a;
     }
+    .clear-all-btn {
+      background: #331111 !important;
+      border-color: #600 !important;
+      color: #ff9999 !important;
+    }
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
       margin-top: 12px;
     }
     @media (max-width: 480px) {
       .stats-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
       }
     }
     .stat-card {
       text-align: center;
       padding: 12px 0;
+      flex: 1;
     }
     .stat-label {
       font-size: 0.9rem;
@@ -126,7 +132,7 @@
       font-size: 1.3rem;
       font-weight: bold;
       margin-top: 4px;
-      text-align: right; /* 右对齐 */
+      text-align: right;
     }
     table {
       width: 100%;
@@ -134,7 +140,7 @@
       margin-top: 16px;
     }
     th, td {
-      padding: 12px 8px;
+      padding: 10px 8px;
       text-align: center;
       border-bottom: 1px solid #222;
       font-size: 0.95rem;
@@ -143,19 +149,37 @@
       color: #bbb;
       font-weight: 600;
     }
-    /* 数字列右对齐 */
     .num-col {
       text-align: right !important;
     }
+    .round-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #222;
+    }
+    .round-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      padding: 10px 0;
+      font-weight: bold;
+      color: #bbb;
+      border-bottom: 2px solid #333;
+    }
+    .players-col, .scores-col, .final-col {
+      text-align: left;
+    }
     .action-cell {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       gap: 6px;
-      flex-wrap: wrap;
-      min-width: 80px;
+      align-items: center;
+      justify-content: center;
     }
     .edit-btn, .delete-btn {
-      padding: 4px 6px; /* 更小 */
+      padding: 4px 6px;
       font-size: 0.8rem;
       border: none;
       border-radius: 4px;
@@ -186,6 +210,16 @@
       border-radius: 0 8px 8px 0;
       font-size: 0.95rem;
     }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -196,11 +230,11 @@
 
     <header>
       <h1>🀄 麻将积分结算</h1>
-      <p class="subtitle">每局自动扣最高分玩家1分入平台资金池（1分 = 20元）</p>
+      <p class="subtitle">每局自动扣最高分玩家1分入平台佣金（1分 = 20元）</p>
     </header>
 
     <div class="panel">
-      <h2 style="margin-bottom: 16px; font-size: 1.2rem;">添加新局记录</h2>
+      <h2 class="panel-title">添加新局记录</h2>
       <div class="form-grid">
         <div class="form-group">
           <label for="nameA">玩家 A</label>
@@ -231,28 +265,24 @@
     </div>
 
     <div class="panel">
-      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">📊 数据统计</h2>
+      <h2 class="panel-title">📊 数据统计</h2>
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">平台资金池（积分）</div>
-          <div class="stat-value" id="poolPoints">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平台资金池（元）</div>
-          <div class="stat-value" id="poolCoins">0</div>
-        </div>
         <div class="stat-card">
           <div class="stat-label">总局数</div>
           <div class="stat-value" id="totalRounds">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平台佣金（元）</div>
+          <div class="stat-value" id="poolCoins">0</div>
         </div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="btn-row" style="justify-content: flex-end; margin-bottom: 12px;">
+      <div class="panel-header">
+        <h2 class="panel-title">👤 玩家总分统计</h2>
         <button class="export-btn" id="exportCsvBtn">📤 导出为 CSV</button>
       </div>
-      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">👤 玩家总分统计</h2>
       <table id="playerStatsTable">
         <thead>
           <tr>
@@ -266,21 +296,17 @@
     </div>
 
     <div class="panel">
-      <h2 style="font-size: 1.2rem; margin-bottom: 12px;">📜 已记录对局</h2>
-      <table id="roundsTable">
-        <thead>
-          <tr>
-            <th>玩家A</th>
-            <th>玩家B</th>
-            <th>玩家C</th>
-            <th>玩家D</th>
-            <th>原始分</th>
-            <th>结算后</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="roundsBody"></tbody>
-      </table>
+      <div class="panel-header">
+        <h2 class="panel-title">📜 已记录对局</h2>
+        <button class="clear-all-btn" id="clearAllBtn">🗑️ 清空所有</button>
+      </div>
+      <div class="round-header">
+        <div>玩家</div>
+        <div>原始分</div>
+        <div>结算后</div>
+        <div>操作</div>
+      </div>
+      <div id="roundsList"></div>
     </div>
   </div>
 
@@ -394,7 +420,7 @@
     }
 
     function deleteRound(id) {
-      if (!confirm('确定删除？')) return;
+      if (!confirm('确定删除此局？')) return;
       rounds = rounds.filter(r => r.id !== id);
       localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
       renderAll();
@@ -411,7 +437,20 @@
       showMessage('📝 已载入该局数据，请修改后重新提交', 'success');
     }
 
-    // ========== CSV 导出（“金币” → “元”）==========
+    function clearAllRounds() {
+      if (rounds.length === 0) {
+        alert('暂无记录可清空！');
+        return;
+      }
+      if (!confirm('⚠️ 确定清空所有记录？此操作不可恢复！')) return;
+      rounds = [];
+      localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
+      renderAll();
+      updateKnownPlayers();
+      showMessage('🗑️ 所有记录已清空！', 'success');
+    }
+
+    // ========== CSV 导出 ==========
     function exportToCSV() {
       if (rounds.length === 0) {
         alert('暂无数据可导出！');
@@ -426,8 +465,7 @@
         });
       });
 
-      const poolPoints = rounds.length;
-      const poolCoins = poolPoints * 20;
+      const poolCoins = rounds.length * 20;
 
       let csv = '';
 
@@ -440,18 +478,18 @@
         });
       csv += '\n';
 
-      csv += '【资金池汇总】\n';
-      csv += '累计积分,累计元,总局数\n';
-      csv += `${poolPoints},${poolCoins},${rounds.length}\n`;
+      csv += '【平台佣金汇总】\n';
+      csv += '总局数,平台佣金（元）\n';
+      csv += `${rounds.length},${poolCoins}\n`;
       csv += '\n';
 
       csv += '【每局记录明细】\n';
-      csv += '玩家A,玩家B,玩家C,玩家D,原始分A,原始分B,原始分C,原始分D,结算分A,结算分B,结算分C,结算分D,时间\n';
+      csv += '玩家,原始分,结算后\n';
       rounds.forEach(r => {
-        csv += `"${r.names[0]}","${r.names[1]}","${r.names[2]}","${r.names[3]}"`;
-        csv += `,${Math.round(r.scores[0])},${Math.round(r.scores[1])},${Math.round(r.scores[2])},${Math.round(r.scores[3])}`;
-        csv += `,${Math.round(r.finalScores[0])},${Math.round(r.finalScores[1])},${Math.round(r.finalScores[2])},${Math.round(r.finalScores[3])}`;
-        csv += `,"${r.timestamp}"\n`;
+        for (let i = 0; i < 4; i++) {
+          csv += `"${r.names[i]}",${Math.round(r.scores[i])},${Math.round(r.finalScores[i])}\n`;
+        }
+        csv += '\n';
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -473,34 +511,37 @@
     }
 
     function renderRounds() {
-      const tbody = document.getElementById('roundsBody');
-      tbody.innerHTML = '';
+      const container = document.getElementById('roundsList');
+      container.innerHTML = '';
+      if (rounds.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">暂无记录</div>';
+        return;
+      }
+
       rounds.forEach(r => {
-        const row = document.createElement('tr');
-        // 所有分数四舍五入为整数，用空格分隔（无逗号）
-        const orig = r.scores.map(s => Math.round(s)).join(' ');
-        const final = r.finalScores.map(s => Math.round(s)).join(' ');
-        row.innerHTML = `
-          <td>${r.names[0]}</td>
-          <td>${r.names[1]}</td>
-          <td>${r.names[2]}</td>
-          <td>${r.names[3]}</td>
-          <td class="num-col">${orig}</td>
-          <td class="num-col">${final}</td>
-          <td class="action-cell">
+        const div = document.createElement('div');
+        div.className = 'round-row';
+        const players = r.names.map(name => `<div>${name}</div>`).join('');
+        const origScores = r.scores.map(s => `<div>${Math.round(s)}</div>`).join('');
+        const finalScores = r.finalScores.map(s => `<div>${Math.round(s)}</div>`).join('');
+
+        div.innerHTML = `
+          <div class="players-col">${players}</div>
+          <div class="scores-col num-col">${origScores}</div>
+          <div class="final-col num-col">${finalScores}</div>
+          <div class="action-cell">
             <button class="edit-btn" onclick="editRound(${r.id})">✏️</button>
             <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️</button>
-          </td>
+          </div>
         `;
-        tbody.appendChild(row);
+        container.appendChild(div);
       });
     }
 
     function renderStats() {
       const total = rounds.length;
-      document.getElementById('poolPoints').textContent = total;
-      document.getElementById('poolCoins').textContent = total * 20;
       document.getElementById('totalRounds').textContent = total;
+      document.getElementById('poolCoins').textContent = total * 20;
     }
 
     function renderPlayerStats() {
@@ -533,6 +574,7 @@
     document.getElementById('addRoundBtn').addEventListener('click', addRound);
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
     document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+    document.getElementById('clearAllBtn').addEventListener('click', clearAllRounds);
 
     updateKnownPlayers();
     renderAll();
