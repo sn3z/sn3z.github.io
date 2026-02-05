@@ -126,6 +126,7 @@
       font-size: 1.3rem;
       font-weight: bold;
       margin-top: 4px;
+      text-align: right; /* 右对齐 */
     }
     table {
       width: 100%;
@@ -142,17 +143,24 @@
       color: #bbb;
       font-weight: 600;
     }
+    /* 数字列右对齐 */
+    .num-col {
+      text-align: right !important;
+    }
     .action-cell {
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
+      min-width: 80px;
     }
     .edit-btn, .delete-btn {
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      padding: 4px 6px; /* 更小 */
+      font-size: 0.8rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
+      min-width: 28px;
+      height: 28px;
     }
     .edit-btn {
       background: #333;
@@ -188,7 +196,7 @@
 
     <header>
       <h1>🀄 麻将积分结算</h1>
-      <p class="subtitle">每局自动扣最高分玩家1分入金币池（1分 = 20金币）</p>
+      <p class="subtitle">每局自动扣最高分玩家1分入平台资金池（1分 = 20元）</p>
     </header>
 
     <div class="panel">
@@ -226,11 +234,11 @@
       <h2 style="font-size: 1.2rem; margin-bottom: 12px;">📊 数据统计</h2>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">平台金币池（积分）</div>
+          <div class="stat-label">平台资金池（积分）</div>
           <div class="stat-value" id="poolPoints">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">平台金币池（金币）</div>
+          <div class="stat-label">平台资金池（元）</div>
           <div class="stat-value" id="poolCoins">0</div>
         </div>
         <div class="stat-card">
@@ -250,7 +258,7 @@
           <tr>
             <th>玩家昵称</th>
             <th>总积分</th>
-            <th>金币收益</th>
+            <th>收益（元）</th>
           </tr>
         </thead>
         <tbody id="playerStatsBody"></tbody>
@@ -262,10 +270,10 @@
       <table id="roundsTable">
         <thead>
           <tr>
-            <th>A</th>
-            <th>B</th>
-            <th>C</th>
-            <th>D</th>
+            <th>玩家A</th>
+            <th>玩家B</th>
+            <th>玩家C</th>
+            <th>玩家D</th>
             <th>原始分</th>
             <th>结算后</th>
             <th>操作</th>
@@ -312,9 +320,7 @@
       return { names, scores };
     }
 
-    // ========== 增强查重：忽略玩家顺序 ==========
     function normalizeRound(round) {
-      // 将 (昵称, 得分) 配对，按昵称排序
       const pairs = round.names.map((name, i) => ({ name, score: round.scores[i] }));
       pairs.sort((a, b) => a.name.localeCompare(b.name));
       return {
@@ -395,11 +401,9 @@
       updateKnownPlayers();
     }
 
-    // ========== 修复编辑功能 ==========
     function editRound(id) {
       const r = rounds.find(x => x.id === id);
       if (!r) return;
-      // 不删除，只载入到表单
       ['A','B','C','D'].forEach((p, i) => {
         document.getElementById(`name${p}`).value = r.names[i];
         document.getElementById(`score${p}`).value = r.scores[i];
@@ -407,7 +411,7 @@
       showMessage('📝 已载入该局数据，请修改后重新提交', 'success');
     }
 
-    // ========== 增强版 CSV 导出 ==========
+    // ========== CSV 导出（“金币” → “元”）==========
     function exportToCSV() {
       if (rounds.length === 0) {
         alert('暂无数据可导出！');
@@ -428,16 +432,16 @@
       let csv = '';
 
       csv += '【玩家总分统计】\n';
-      csv += '玩家昵称,总积分,金币收益\n';
+      csv += '玩家昵称,总积分,收益（元）\n';
       Object.entries(playerStats)
         .sort((a, b) => b[1] - a[1])
         .forEach(([name, total]) => {
-          csv += `"${name}",${total},${Math.round(total * 20)}\n`;
+          csv += `"${name}",${Math.round(total)},${Math.round(total * 20)}\n`;
         });
       csv += '\n';
 
-      csv += '【金币池汇总】\n';
-      csv += '累计积分,累计金币,总局数\n';
+      csv += '【资金池汇总】\n';
+      csv += '累计积分,累计元,总局数\n';
       csv += `${poolPoints},${poolCoins},${rounds.length}\n`;
       csv += '\n';
 
@@ -445,8 +449,8 @@
       csv += '玩家A,玩家B,玩家C,玩家D,原始分A,原始分B,原始分C,原始分D,结算分A,结算分B,结算分C,结算分D,时间\n';
       rounds.forEach(r => {
         csv += `"${r.names[0]}","${r.names[1]}","${r.names[2]}","${r.names[3]}"`;
-        csv += `,${r.scores[0]},${r.scores[1]},${r.scores[2]},${r.scores[3]}`;
-        csv += `,${r.finalScores[0]},${r.finalScores[1]},${r.finalScores[2]},${r.finalScores[3]}`;
+        csv += `,${Math.round(r.scores[0])},${Math.round(r.scores[1])},${Math.round(r.scores[2])},${Math.round(r.scores[3])}`;
+        csv += `,${Math.round(r.finalScores[0])},${Math.round(r.finalScores[1])},${Math.round(r.finalScores[2])},${Math.round(r.finalScores[3])}`;
         csv += `,"${r.timestamp}"\n`;
       });
 
@@ -461,11 +465,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // ========== 分数格式化：整数不显示小数 ==========
-    function formatScore(score) {
-      return Number.isInteger(score) ? String(score) : score.toFixed(1);
-    }
-
     // ========== 渲染 ==========
     function renderAll() {
       renderRounds();
@@ -478,16 +477,16 @@
       tbody.innerHTML = '';
       rounds.forEach(r => {
         const row = document.createElement('tr');
-        // 优化显示：移除中括号，整数不带 .0
-        const orig = r.scores.map(formatScore).join(', ');
-        const final = r.finalScores.map(formatScore).join(', ');
+        // 所有分数四舍五入为整数，用空格分隔（无逗号）
+        const orig = r.scores.map(s => Math.round(s)).join(' ');
+        const final = r.finalScores.map(s => Math.round(s)).join(' ');
         row.innerHTML = `
           <td>${r.names[0]}</td>
           <td>${r.names[1]}</td>
           <td>${r.names[2]}</td>
           <td>${r.names[3]}</td>
-          <td>${orig}</td>
-          <td>${final}</td>
+          <td class="num-col">${orig}</td>
+          <td class="num-col">${final}</td>
           <td class="action-cell">
             <button class="edit-btn" onclick="editRound(${r.id})">✏️</button>
             <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️</button>
@@ -518,12 +517,13 @@
       Object.entries(stats)
         .sort((a, b) => b[1] - a[1])
         .forEach(([name, total]) => {
-          const displayTotal = Number.isInteger(total) ? (total >= 0 ? `+${total}` : String(total)) : (total >= 0 ? `+${total.toFixed(1)}` : total.toFixed(1));
+          const rounded = Math.round(total);
+          const displayTotal = rounded >= 0 ? `+${rounded}` : String(rounded);
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${name}</td>
-            <td>${displayTotal}</td>
-            <td>${Math.round(total * 20)} 金币</td>
+            <td class="num-col">${displayTotal}</td>
+            <td class="num-col">${Math.round(total * 20)} 元</td>
           `;
           tbody.appendChild(row);
         });
