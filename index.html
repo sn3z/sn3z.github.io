@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>四人麻将积分结算（支持导出）</title>
+  <title>🀄 四人麻将积分结算</title>
   <style>
     :root {
       --glass-bg: rgba(255, 255, 255, 0.15);
@@ -26,7 +26,7 @@
       min-height: 100vh;
       padding: 20px;
     }
-    。container {
+    .container {
       max-width: 1000px;
       margin: 0 auto;
     }
@@ -86,7 +86,7 @@
       gap: 10px;
       flex-wrap: wrap;
     }
-    。stats-grid {
+    .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
@@ -135,13 +135,6 @@
     .export-btn {
       background: #ba68c8;
       color: white;
-    }
-    .notice {
-      padding: 12px;
-      background: rgba(255, 107, 107, 0.2);
-      border-left: 4px solid var(--error);
-      margin: 15px 0;
-      border-radius: 0 8px 8px 0;
     }
     .wechat-tip {
       background: rgba(255, 215, 0, 0.2);
@@ -255,11 +248,21 @@
         const div = document.createElement('div');
         div.innerHTML = `
           <label>玩家 ${String.fromCharCode(65 + i)}</label>
-          <input type="text" placeholder="昵称" data-field="name" data-index="${i}">
+          <input type="text" placeholder="昵称" data-field="name" data-index="${i}" list="playerNames">
           <input type="number" placeholder="得分" data-field="score" data-index="${i}" step="1">
         `;
         container.appendChild(div);
       }
+
+      // 添加 datalist 用于已知玩家提示（仅已提交的）
+      const datalist = document.createElement('datalist');
+      datalist.id = 'playerNames';
+      knownPlayers.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        datalist.appendChild(option);
+      });
+      document.body.appendChild(datalist);
     }
 
     // ========== 获取表单数据 ==========
@@ -269,8 +272,9 @@
       for (let i = 0; i < 4; i++) {
         const nameInput = document.querySelector(`input[data-field="name"][data-index="${i}"]`);
         const scoreInput = document.querySelector(`input[data-field="score"][data-index="${i}"]`);
-        const name = nameInput.value.trim();
-        const score = parseFloat(scoreInput.value);
+        const name = (nameInput.value || '').trim();
+        const scoreStr = (scoreInput.value || '').trim();
+        const score = scoreStr === '' ? NaN : parseFloat(scoreStr);
         if (!name || isNaN(score)) return null;
         names.push(name);
         scores.push(score);
@@ -281,8 +285,8 @@
     // ========== 查重 ==========
     function isDuplicate(newRound) {
       return rounds.some(r =>
-        r.names.every((n, i) => n === newRound.names[i]) &&
-        r.scores.every((s, i) => s === newRound.scores[i])
+        r.names.join(',') === newRound.names.join(',') &&
+        r.scores.join(',') === newRound.scores.join(',')
       );
     }
 
@@ -299,8 +303,16 @@
         return;
       }
 
-      let maxScore = Math.max(...data.scores);
-      let maxIndex = data.scores.indexOf(maxScore);
+      // 找最高分（若有多个，取第一个）
+      let maxScore = -Infinity;
+      let maxIndex = 0;
+      for (let i = 0; i < 4; i++) {
+        if (data.scores[i] > maxScore) {
+          maxScore = data.scores[i];
+          maxIndex = i;
+        }
+      }
+
       const finalScores = [...data.scores];
       finalScores[maxIndex] -= 1;
 
@@ -313,7 +325,7 @@
       const newRound = {
         id: Date.now(),
         names: data.names,
-        scores: data.scores,
+        scores: data.scores, // 原始分
         finalScores,
         poolAdded: 1,
         timestamp: new Date().toLocaleString()
@@ -321,7 +333,8 @@
 
       rounds.push(newRound);
 
-      data。names.forEach(name => {
+      // 更新已知玩家（仅当提交成功后才记住）
+      data.names.forEach(name => {
         if (!knownPlayers.includes(name)) {
           knownPlayers.push(name);
         }
@@ -362,6 +375,7 @@
       rounds.forEach(r => r.names.forEach(n => allNames.add(n)));
       knownPlayers = Array.from(allNames);
       localStorage.setItem('mahjongPlayers', JSON.stringify(knownPlayers));
+      initPlayerInputs(); // 重新加载自动补全
     }
 
     function editRound(id) {
@@ -398,7 +412,7 @@
       a.download = '麻将积分记录.csv';
       document.body.appendChild(a);
       a.click();
-      document。body.removeChild(a);
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
@@ -419,8 +433,8 @@
           <td>${r.names[1]}</td>
           <td>${r.names[2]}</td>
           <td>${r.names[3]}</td>
-          <td>[${r.scores.join(', ')}]</td>
-          <td>[${r.finalScores.join(', ')}]</td>
+          <td>[${r.scores.map(s => s.toFixed(1)).join(', ')}]</td>
+          <td>[${r.finalScores.map(s => s.toFixed(1)).join(', ')}]</td>
           <td>+1 分 → 20 金币</td>
           <td class="action-cell">
             <button class="edit-btn" onclick="editRound(${r.id})">✏️ 编辑</button>
@@ -455,7 +469,7 @@
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${name}</td>
-            <td>${total > 0 ? '+' + total : total}</td>
+            <td>${total >= 0 ? '+' + total.toFixed(1) : total.toFixed(1)}</td>
             <td>${(total * 20).toFixed(0)} 金币</td>
           `;
           tbody.appendChild(row);
@@ -463,9 +477,9 @@
     }
 
     // ========== 事件绑定 ==========
-    document.getElementById('addRoundBtn').addEventListener('click'， addRound);
-    document.getElementById('clearFormBtn').addEventListener('click'， clearForm);
-    document.getElementById('exportCsvBtn').addEventListener('click'， exportToCSV);
+    document.getElementById('addRoundBtn').addEventListener('click', addRound);
+    document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
 
     // ========== 初始化 ==========
     initPlayerInputs();
