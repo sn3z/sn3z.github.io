@@ -96,33 +96,28 @@
     button:hover {
       background: #333;
     }
-    .export-btn, .clear-all-btn {
-      background: #1a1a1a;
-      border-color: #555;
-    }
-    .export-btn:hover, .clear-all-btn:hover {
-      background: #2a2a2a;
+    /* 小型操作按钮 */
+    .small-btn {
+      padding: 6px 10px !important;
+      font-size: 0.85rem !important;
+      min-width: auto !important;
+      flex: none !important;
+      height: auto !important;
     }
     .clear-all-btn {
       background: #331111 !important;
       border-color: #600 !important;
       color: #ff9999 !important;
     }
-    .stats-grid {
+    /* 数据统计：横向排列 */
+    .stats-row {
       display: flex;
-      justify-content: space-between;
-      gap: 20px;
+      gap: 24px;
       margin-top: 12px;
     }
-    @media (max-width: 480px) {
-      .stats-grid {
-        flex-direction: column;
-      }
-    }
-    .stat-card {
-      text-align: center;
-      padding: 12px 0;
+    .stat-item {
       flex: 1;
+      text-align: center;
     }
     .stat-label {
       font-size: 0.9rem;
@@ -152,31 +147,32 @@
     .num-col {
       text-align: right !important;
     }
-    .round-row {
+    /* 已记录对局：新布局 */
+    .rounds-header, .round-item {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid #222;
-    }
-    .round-header {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 1fr 0.8fr 0.8fr 60px;
       gap: 12px;
       padding: 10px 0;
+      align-items: start;
+    }
+    .rounds-header {
       font-weight: bold;
       color: #bbb;
       border-bottom: 2px solid #333;
+      margin-bottom: 8px;
     }
-    .players-col, .scores-col, .final-col {
-      text-align: left;
+    .players-list, .scores-list, .final-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     .action-cell {
       display: flex;
       flex-direction: column;
       gap: 6px;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 2px;
     }
     .edit-btn, .delete-btn {
       padding: 4px 6px;
@@ -185,15 +181,10 @@
       border-radius: 4px;
       min-width: 28px;
       height: 28px;
-    }
-    .edit-btn {
       background: #333;
-      color: #ffcc00;
     }
-    .delete-btn {
-      background: #333;
-      color: #ff6b6b;
-    }
+    .edit-btn { color: #ffcc00; }
+    .delete-btn { color: #ff6b6b; }
     .message {
       min-height: 24px;
       margin-top: 12px;
@@ -214,7 +205,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .panel-title {
       font-size: 1.2rem;
@@ -266,12 +257,12 @@
 
     <div class="panel">
       <h2 class="panel-title">📊 数据统计</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
+      <div class="stats-row">
+        <div class="stat-item">
           <div class="stat-label">总局数</div>
           <div class="stat-value" id="totalRounds">0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-item">
           <div class="stat-label">平台佣金（元）</div>
           <div class="stat-value" id="poolCoins">0</div>
         </div>
@@ -281,7 +272,7 @@
     <div class="panel">
       <div class="panel-header">
         <h2 class="panel-title">👤 玩家总分统计</h2>
-        <button class="export-btn" id="exportCsvBtn">📤 导出为 CSV</button>
+        <button class="small-btn export-btn" id="exportCsvBtn">📤 导出CSV</button>
       </div>
       <table id="playerStatsTable">
         <thead>
@@ -298,9 +289,9 @@
     <div class="panel">
       <div class="panel-header">
         <h2 class="panel-title">📜 已记录对局</h2>
-        <button class="clear-all-btn" id="clearAllBtn">🗑️ 清空所有</button>
+        <button class="small-btn clear-all-btn" id="clearAllBtn">🗑️ 清空</button>
       </div>
-      <div class="round-header">
+      <div class="rounds-header">
         <div>玩家</div>
         <div>原始分</div>
         <div>结算后</div>
@@ -520,15 +511,15 @@
 
       rounds.forEach(r => {
         const div = document.createElement('div');
-        div.className = 'round-row';
+        div.className = 'round-item';
         const players = r.names.map(name => `<div>${name}</div>`).join('');
         const origScores = r.scores.map(s => `<div>${Math.round(s)}</div>`).join('');
         const finalScores = r.finalScores.map(s => `<div>${Math.round(s)}</div>`).join('');
 
         div.innerHTML = `
-          <div class="players-col">${players}</div>
-          <div class="scores-col num-col">${origScores}</div>
-          <div class="final-col num-col">${finalScores}</div>
+          <div class="players-list">${players}</div>
+          <div class="scores-list num-col">${origScores}</div>
+          <div class="final-list num-col">${finalScores}</div>
           <div class="action-cell">
             <button class="edit-btn" onclick="editRound(${r.id})">✏️</button>
             <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️</button>
