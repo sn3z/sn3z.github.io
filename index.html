@@ -312,11 +312,24 @@
       return { names, scores };
     }
 
-    function isDuplicate(data) {
-      return rounds.some(r =>
-        r.names.join(',') === data.names.join(',') &&
-        r.scores.join(',') === data.scores.join(',')
-      );
+    // ========== 增强查重：忽略玩家顺序 ==========
+    function normalizeRound(round) {
+      // 将 (昵称, 得分) 配对，按昵称排序
+      const pairs = round.names.map((name, i) => ({ name, score: round.scores[i] }));
+      pairs.sort((a, b) => a.name.localeCompare(b.name));
+      return {
+        names: pairs.map(p => p.name),
+        scores: pairs.map(p => p.score)
+      };
+    }
+
+    function isDuplicate(newData) {
+      const normNew = normalizeRound(newData);
+      return rounds.some(existing => {
+        const normExist = normalizeRound(existing);
+        return normNew.names.join(',') === normExist.names.join(',') &&
+               normNew.scores.join(',') === normExist.scores.join(',');
+      });
     }
 
     function addRound() {
@@ -382,15 +395,16 @@
       updateKnownPlayers();
     }
 
+    // ========== 修复编辑功能 ==========
     function editRound(id) {
       const r = rounds.find(x => x.id === id);
       if (!r) return;
-      deleteRound(id);
+      // 不删除，只载入到表单
       ['A','B','C','D'].forEach((p, i) => {
         document.getElementById(`name${p}`).value = r.names[i];
         document.getElementById(`score${p}`).value = r.scores[i];
       });
-      showMessage('📝 已载入，请修改后重新提交', 'success');
+      showMessage('📝 已载入该局数据，请修改后重新提交', 'success');
     }
 
     // ========== 增强版 CSV 导出 ==========
@@ -400,7 +414,6 @@
         return;
       }
 
-      // 计算玩家总分
       const playerStats = {};
       rounds.forEach(r => {
         r.names.forEach((name, i) => {
@@ -414,7 +427,6 @@
 
       let csv = '';
 
-      // 第一部分：玩家总分统计
       csv += '【玩家总分统计】\n';
       csv += '玩家昵称,总积分,金币收益\n';
       Object.entries(playerStats)
@@ -424,13 +436,11 @@
         });
       csv += '\n';
 
-      // 第二部分：金币池汇总
       csv += '【金币池汇总】\n';
       csv += '累计积分,累计金币,总局数\n';
       csv += `${poolPoints},${poolCoins},${rounds.length}\n`;
       csv += '\n';
 
-      // 第三部分：每局明细
       csv += '【每局记录明细】\n';
       csv += '玩家A,玩家B,玩家C,玩家D,原始分A,原始分B,原始分C,原始分D,结算分A,结算分B,结算分C,结算分D,时间\n';
       rounds.forEach(r => {
@@ -451,6 +461,11 @@
       URL.revokeObjectURL(url);
     }
 
+    // ========== 分数格式化：整数不显示小数 ==========
+    function formatScore(score) {
+      return Number.isInteger(score) ? String(score) : score.toFixed(1);
+    }
+
     // ========== 渲染 ==========
     function renderAll() {
       renderRounds();
@@ -463,13 +478,16 @@
       tbody.innerHTML = '';
       rounds.forEach(r => {
         const row = document.createElement('tr');
+        // 优化显示：移除中括号，整数不带 .0
+        const orig = r.scores.map(formatScore).join(', ');
+        const final = r.finalScores.map(formatScore).join(', ');
         row.innerHTML = `
           <td>${r.names[0]}</td>
           <td>${r.names[1]}</td>
           <td>${r.names[2]}</td>
           <td>${r.names[3]}</td>
-          <td>[${r.scores.map(s => s.toFixed(1)).join(', ')}]</td>
-          <td>[${r.finalScores.map(s => s.toFixed(1)).join(', ')}]</td>
+          <td>${orig}</td>
+          <td>${final}</td>
           <td class="action-cell">
             <button class="edit-btn" onclick="editRound(${r.id})">✏️</button>
             <button class="delete-btn" onclick="deleteRound(${r.id})">🗑️</button>
@@ -500,10 +518,11 @@
       Object.entries(stats)
         .sort((a, b) => b[1] - a[1])
         .forEach(([name, total]) => {
+          const displayTotal = Number.isInteger(total) ? (total >= 0 ? `+${total}` : String(total)) : (total >= 0 ? `+${total.toFixed(1)}` : total.toFixed(1));
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${name}</td>
-            <td>${total >= 0 ? '+' + total.toFixed(1) : total.toFixed(1)}</td>
+            <td>${displayTotal}</td>
             <td>${Math.round(total * 20)} 金币</td>
           `;
           tbody.appendChild(row);
