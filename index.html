@@ -170,8 +170,27 @@
 
     <div class="glass-panel">
       <h2>添加新局记录</h2>
-      <div class="form-grid" id="playerInputs">
-        <!-- 动态生成4个玩家输入 -->
+      <div class="form-grid">
+        <div>
+          <label>玩家 A</label>
+          <input type="text" id="nameA" placeholder="昵称" list="knownPlayers">
+          <input type="number" id="scoreA" placeholder="得分" step="any">
+        </div>
+        <div>
+          <label>玩家 B</label>
+          <input type="text" id="nameB" placeholder="昵称" list="knownPlayers">
+          <input type="number" id="scoreB" placeholder="得分" step="any">
+        </div>
+        <div>
+          <label>玩家 C</label>
+          <input type="text" id="nameC" placeholder="昵称" list="knownPlayers">
+          <input type="number" id="scoreC" placeholder="得分" step="any">
+        </div>
+        <div>
+          <label>玩家 D</label>
+          <input type="text" id="nameD" placeholder="昵称" list="knownPlayers">
+          <input type="number" id="scoreD" placeholder="得分" step="any">
+        </div>
       </div>
       <div class="btn-row">
         <button id="addRoundBtn">✅ 提交本局</button>
@@ -233,51 +252,50 @@
         <tbody id="roundsBody"></tbody>
       </table>
     </div>
+
+    <!-- 用于自动补全的 datalist -->
+    <datalist id="knownPlayers"></datalist>
   </div>
 
   <script>
     // ========== 数据存储 ==========
     let rounds = JSON.parse(localStorage.getItem('mahjongRounds') || '[]');
-    let knownPlayers = JSON.parse(localStorage.getItem('mahjongPlayers') || '[]');
 
-    // ========== 初始化输入框 ==========
-    function initPlayerInputs() {
-      const container = document.getElementById('playerInputs');
-      container.innerHTML = '';
-      for (let i = 0; i < 4; i++) {
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <label>玩家 ${String.fromCharCode(65 + i)}</label>
-          <input type="text" placeholder="昵称" data-field="name" data-index="${i}" list="playerNames">
-          <input type="number" placeholder="得分" data-field="score" data-index="${i}" step="1">
-        `;
-        container.appendChild(div);
-      }
-
-      // 添加 datalist 用于已知玩家提示（仅已提交的）
-      const datalist = document.createElement('datalist');
-      datalist.id = 'playerNames';
-      knownPlayers.forEach(name => {
+    // 更新已知玩家列表（用于自动补全）
+    function updateKnownPlayers() {
+      const knownPlayersSet = new Set();
+      rounds.forEach(round => {
+        round.names.forEach(name => knownPlayersSet.add(name));
+      });
+      const datalist = document.getElementById('knownPlayers');
+      datalist.innerHTML = '';
+      knownPlayersSet.forEach(name => {
         const option = document.createElement('option');
         option.value = name;
         datalist.appendChild(option);
       });
-      document.body.appendChild(datalist);
     }
 
     // ========== 获取表单数据 ==========
     function getFormData() {
-      const names = [];
-      const scores = [];
+      const names = [
+        document.getElementById('nameA').value.trim(),
+        document.getElementById('nameB').value.trim(),
+        document.getElementById('nameC').value.trim(),
+        document.getElementById('nameD').value.trim()
+      ];
+      const scores = [
+        parseFloat(document.getElementById('scoreA').value),
+        parseFloat(document.getElementById('scoreB').value),
+        parseFloat(document.getElementById('scoreC').value),
+        parseFloat(document.getElementById('scoreD').value)
+      ];
+
+      // 检查是否为空或无效
       for (let i = 0; i < 4; i++) {
-        const nameInput = document.querySelector(`input[data-field="name"][data-index="${i}"]`);
-        const scoreInput = document.querySelector(`input[data-field="score"][data-index="${i}"]`);
-        const name = (nameInput.value || '').trim();
-        const scoreStr = (scoreInput.value || '').trim();
-        const score = scoreStr === '' ? NaN : parseFloat(scoreStr);
-        if (!name || isNaN(score)) return null;
-        names.push(name);
-        scores.push(score);
+        if (!names[i] || isNaN(scores[i])) {
+          return null;
+        }
       }
       return { names, scores };
     }
@@ -303,12 +321,10 @@
         return;
       }
 
-      // 找最高分（若有多个，取第一个）
-      let maxScore = -Infinity;
+      // 找最高分（多个时取第一个）
       let maxIndex = 0;
-      for (let i = 0; i < 4; i++) {
-        if (data.scores[i] > maxScore) {
-          maxScore = data.scores[i];
+      for (let i = 1; i < 4; i++) {
+        if (data.scores[i] > data.scores[maxIndex]) {
           maxIndex = i;
         }
       }
@@ -316,8 +332,9 @@
       const finalScores = [...data.scores];
       finalScores[maxIndex] -= 1;
 
+      // 验证总和为 -1
       const total = finalScores.reduce((a, b) => a + b, 0);
-      if (total !== -1) {
+      if (Math.abs(total + 1) > 1e-5) {
         showMessage('⚠️ 结算异常：总分不为 -1！', 'error');
         return;
       }
@@ -325,32 +342,30 @@
       const newRound = {
         id: Date.now(),
         names: data.names,
-        scores: data.scores, // 原始分
+        scores: data.scores,
         finalScores,
-        poolAdded: 1,
         timestamp: new Date().toLocaleString()
       };
 
       rounds.push(newRound);
-
-      // 更新已知玩家（仅当提交成功后才记住）
-      data.names.forEach(name => {
-        if (!knownPlayers.includes(name)) {
-          knownPlayers.push(name);
-        }
-      });
-
       localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
-      localStorage.setItem('mahjongPlayers', JSON.stringify(knownPlayers));
 
       renderAll();
       clearForm();
+      updateKnownPlayers();
       showMessage('✅ 本局已成功记录！', 'success');
     }
 
     // ========== 辅助函数 ==========
     function clearForm() {
-      document.querySelectorAll('input').forEach(inp => inp.value = '');
+      document.getElementById('nameA').value = '';
+      document.getElementById('nameB').value = '';
+      document.getElementById('nameC').value = '';
+      document.getElementById('nameD').value = '';
+      document.getElementById('scoreA').value = '';
+      document.getElementById('scoreB').value = '';
+      document.getElementById('scoreC').value = '';
+      document.getElementById('scoreD').value = '';
     }
 
     function showMessage(text, type = 'info') {
@@ -366,26 +381,22 @@
       if (!confirm('确定删除这局记录？')) return;
       rounds = rounds.filter(r => r.id !== id);
       localStorage.setItem('mahjongRounds', JSON.stringify(rounds));
-      recalcKnownPlayers();
       renderAll();
-    }
-
-    function recalcKnownPlayers() {
-      const allNames = new Set();
-      rounds.forEach(r => r.names.forEach(n => allNames.add(n)));
-      knownPlayers = Array.from(allNames);
-      localStorage.setItem('mahjongPlayers', JSON.stringify(knownPlayers));
-      initPlayerInputs(); // 重新加载自动补全
+      updateKnownPlayers();
     }
 
     function editRound(id) {
       const round = rounds.find(r => r.id === id);
       if (!round) return;
       deleteRound(id);
-      for (let i = 0; i < 4; i++) {
-        document.querySelector(`input[data-field="name"][data-index="${i}"]`).value = round.names[i];
-        document.querySelector(`input[data-field="score"][data-index="${i}"]`).value = round.scores[i];
-      }
+      document.getElementById('nameA').value = round.names[0];
+      document.getElementById('nameB').value = round.names[1];
+      document.getElementById('nameC').value = round.names[2];
+      document.getElementById('nameD').value = round.names[3];
+      document.getElementById('scoreA').value = round.scores[0];
+      document.getElementById('scoreB').value = round.scores[1];
+      document.getElementById('scoreC').value = round.scores[2];
+      document.getElementById('scoreD').value = round.scores[3];
       showMessage('📝 已载入该局数据，请修改后重新提交', 'info');
     }
 
@@ -406,7 +417,6 @@
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement('a');
       a.href = url;
       a.download = '麻将积分记录.csv';
@@ -464,8 +474,8 @@
       const tbody = document.getElementById('playerStatsBody');
       tbody.innerHTML = '';
       Object.entries(stats)
-        。sort((a, b) => b[1] - a[1])
-        。forEach(([name, total]) => {
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, total]) => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${name}</td>
@@ -482,9 +492,10 @@
     document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
 
     // ========== 初始化 ==========
-    initPlayerInputs();
+    updateKnownPlayers();
     renderAll();
 
+    // 暴露给全局（用于 inline onclick）
     window.editRound = editRound;
     window.deleteRound = deleteRound;
   </script>
