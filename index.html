@@ -368,13 +368,17 @@
         return;
       }
 
-      let maxIndex = 0;
-      for (let i = 1; i < 4; i++) {
-        if (data.scores[i] > data.scores[maxIndex]) maxIndex = i;
-      }
+      // --- 核心逻辑修改：查找所有最高分玩家并平分扣款 ---
+      const maxScore = Math.max(...data.scores);
+      const topPlayersIndices = data.scores.map((score, index) => score === maxScore ? index : -1).filter(index => index !== -1);
+      const deductionPerPlayer = 1 / topPlayersIndices.length; // 1分由所有人平摊
 
       const final = [...data.scores];
-      final[maxIndex] -= 1;
+      topPlayersIndices.forEach(index => {
+        final[index] -= deductionPerPlayer;
+      });
+
+      // 验证总分是否为 -1 (允许浮点数误差)
       const total = final.reduce((a, b) => a + b, 0);
       if (Math.abs(total + 1) > 1e-5) {
         showMessage('⚠️ 结算异常：总分不为 -1！', 'error');
@@ -480,7 +484,7 @@
       csv += '玩家,原始分,结算后\n';
       rounds.forEach(r => {
         for (let i = 0; i < 4; i++) {
-          csv += `"${r.names[i]}",${Math.round(r.scores[i])},${Math.round(r.finalScores[i])}\n`;
+          csv += `"${r.names[i]}",${r.scores[i].toFixed(1)},${r.finalScores[i].toFixed(1)}\n`;
         }
         csv += '\n';
       });
@@ -515,8 +519,8 @@
         const div = document.createElement('div');
         div.className = 'round-item';
         const players = r.names.map(name => `<div>${name}</div>`).join('');
-        const origScores = r.scores.map(s => `<div>${Math.round(s)}</div>`).join('');
-        const finalScores = r.finalScores.map(s => `<div>${Math.round(s)}</div>`).join('');
+        const origScores = r.scores.map(s => `<div>${s.toFixed(1)}</div>`).join('');
+        const finalScores = r.finalScores.map(s => `<div>${s.toFixed(1)}</div>`).join('');
 
         div.innerHTML = `
           <div class="players-list">${players}</div>
