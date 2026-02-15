@@ -368,17 +368,16 @@
         return;
       }
 
-      // --- 核心逻辑修改：查找所有最高分玩家并平分扣款 ---
+      // --- 核心逻辑：查找所有最高分玩家并平分扣款 ---
       const maxScore = Math.max(...data.scores);
       const topPlayersIndices = data.scores.map((score, index) => score === maxScore ? index : -1).filter(index => index !== -1);
-      const deductionPerPlayer = 1 / topPlayersIndices.length; // 1分由所有人平摊
+      const deductionPerPlayer = 1 / topPlayersIndices.length;
 
       const final = [...data.scores];
       topPlayersIndices.forEach(index => {
         final[index] -= deductionPerPlayer;
       });
 
-      // 验证总分是否为 -1 (允许浮点数误差)
       const total = final.reduce((a, b) => a + b, 0);
       if (Math.abs(total + 1) > 1e-5) {
         showMessage('⚠️ 结算异常：总分不为 -1！', 'error');
@@ -471,7 +470,8 @@
       Object.entries(playerStats)
         .sort((a, b) => b[1] - a[1])
         .forEach(([name, total]) => {
-          csv += `"${name}",${Math.round(total)},${Math.round(total * 20)}\n`;
+          // 积分保留一位小数，金额向下取整
+          csv += `"${name}",${total.toFixed(1)},${Math.floor(total * 20)}\n`;
         });
       csv += '\n';
 
@@ -555,13 +555,12 @@
       Object.entries(stats)
         .sort((a, b) => b[1] - a[1])
         .forEach(([name, total]) => {
-          const rounded = Math.round(total);
-          const displayTotal = rounded >= 0 ? `+${rounded}` : String(rounded);
           const row = document.createElement('tr');
+          // 总积分显示一位小数，收益（元）显示整数（向下取整）
           row.innerHTML = `
             <td>${name}</td>
-            <td class="num-col">${displayTotal}</td>
-            <td class="num-col">${Math.round(total * 20)} 元</td>
+            <td class="num-col">${total.toFixed(1)}</td>
+            <td class="num-col">${Math.floor(total * 20)} 元</td>
           `;
           tbody.appendChild(row);
         });
